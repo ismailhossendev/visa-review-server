@@ -68,7 +68,7 @@ app.delete('/reviews/:id',async(req,res)=>{
 
 app.get('/services', async(req, res) => {
     const limit = req.query.limit || 0;
-    const result = await services.find({}).limit(parseInt(limit)).toArray();
+    const result = await services.find({}).sort({_id:-1}).limit(parseInt(limit)).toArray();
     res.send({
         success: true,
         message:'Services fetched successfully',
