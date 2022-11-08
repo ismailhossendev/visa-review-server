@@ -38,23 +38,16 @@ app.get('/services', async(req, res) => {
     })
 })
 
-app.post('/services', async(req, res) => {
+app.post('/services/add', async(req, res) => {
     const service = req.body;
     const result = await services.insertOne(service)
-     
-    if(result.insertedCount > 0) {
-        res.send({
-            success: true,
-            message: 'Service added successfully',
-            data: result
-        })
-    } else {
-        res.send({
-            success: false,
-            message: 'Service add failed',
-            data: result
-        })
-    }
+    
+    res.send({
+        success: true,
+        message: 'Service added successfully',
+        data: result
+    })
+    
 })
 
 
