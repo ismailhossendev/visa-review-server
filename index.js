@@ -55,6 +55,15 @@ app.get('/reviews',async(req,res)=>{
     })
 })
 
+app.delete('/reviews/:id',async(req,res)=>{
+    const id = req.params.id;
+    const result = await reviews.deleteOne({_id: ObjectId(id)});
+    res.send({
+        success: true,
+        message: 'Review deleted successfully',
+        data: result
+    })
+})
 
 
 app.get('/services', async(req, res) => {
