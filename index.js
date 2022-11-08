@@ -13,7 +13,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.odx3u2z.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 const services = client.db("Visa_Service").collection("services");
-const review = client.db("Visa_Service").collection("reviews");
+const reviews = client.db("Visa_Service").collection("reviews");
 
 // connect to the database
 client.connect(err => {
@@ -28,6 +28,33 @@ client.connect(err => {
 app.get('/', (req, res) => {
     res.send('server is running');
 })
+
+app.post('/review',async(req,res)=>{
+    const review = req.body;
+    const result = await reviews.insertOne(review);
+    res.send({
+        success: true,
+        message: 'Review added successfully',
+        data: result
+    })
+})
+app.get('/reviews',async(req,res)=>{
+    let filter ={};
+    const product = req.query.productId;
+    if(req.query.email){
+        filter = {email: req.query.email};
+    }else if(req.query.productId){
+        filter = {productId: product};
+    }
+    const result = await reviews.find(filter).sort({time: -1}).toArray();
+    res.send({
+        success: true,
+        message: 'Reviews fetched successfully',
+        data: result
+    })
+})
+
+
 
 app.get('/services', async(req, res) => {
     const limit = req.query.limit || 0;
@@ -71,15 +98,6 @@ app.get('/services/:id', async(req, res) => {
 
 })
 
-app.post('reviews',async()=>{
-    const review = req.body;
-    const result = await review.insertOne(review);
-    res.send({
-        success: true,
-        message: 'Review added successfully',
-        data: result
-    })
-})
 
 //exit 
 app.listen(port, () => {
