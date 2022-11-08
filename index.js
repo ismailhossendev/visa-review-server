@@ -40,13 +40,14 @@ app.post('/review',async(req,res)=>{
 })
 app.get('/reviews',async(req,res)=>{
     let filter ={};
+    const limit = Number(req.query.limit) || 0;
     const product = req.query.productId;
     if(req.query.email){
         filter = {email: req.query.email};
     }else if(req.query.productId){
         filter = {productId: product};
     }
-    const result = await reviews.find(filter).sort({time: -1}).toArray();
+    const result = await reviews.find(filter).sort({time: -1}).limit(limit).toArray();
     res.send({
         success: true,
         message: 'Reviews fetched successfully',
