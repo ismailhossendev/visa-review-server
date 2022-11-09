@@ -38,6 +38,7 @@ app.post('/review',async(req,res)=>{
         data: result
     })
 })
+
 app.get('/reviews',async(req,res)=>{
     let filter ={};
     const limit = Number(req.query.limit) || 0;
@@ -65,6 +66,24 @@ app.delete('/reviews/:id',async(req,res)=>{
     })
 })
 
+app.patch('/reviews/:id',async(req,res)=>{
+        const id = req.params.id;
+        const rev = req.body;
+
+        const  updateDoc = {
+            $set:{
+                reviewText:rev
+            }
+        }
+
+        const result = await reviews.updateOne({_id:ObjectId(id)},updateDoc);
+        res.send({
+            success: true,
+            message: 'Review updated successfully',
+            data: result
+        })
+    
+})
 
 app.get('/services', async(req, res) => {
     const limit = req.query.limit || 0;
