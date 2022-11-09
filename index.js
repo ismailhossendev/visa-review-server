@@ -5,6 +5,9 @@ const cors = require('cors');
 const port = process.env.PORT || 5000;
 require('dotenv').config();
 
+//jwt
+const jwt = require('jsonwebtoken');
+
 // middleware
 app.use(express.json());
 app.use(cors());
@@ -24,9 +27,44 @@ client.connect(err => {
     }
 });
 
+
+// jwt verify function
+const verifyToken = (req, res, next) => {
+    const Header = req.headers.authorization;
+    if(!Header){
+        return res.status(401).send({
+            message:'unauthorized access',
+            data:[]
+        })
+    } 
+        
+
+    const token = Header.split(' ')[1];
+
+    jwt.verify(token,process.env.JWT_SECRET,function(err,decoded){
+        if(err){
+            return res.status(403).send({
+                message:'forbidden access',
+            });
+        }
+        req.decoded = decoded
+        next();
+    })
+
+}
+
+
+
 // routes
 app.get('/', (req, res) => {
     res.send('server is running');
+})
+
+app.post('/jwt', (req, res) =>{
+    const user = req.body.email;
+    const token = jwt.sign(user, process.env.JWT_SECRET)
+    console.log(token);
+    res.send({token})
 })
 
 app.post('/review',async(req,res)=>{
@@ -42,11 +80,9 @@ app.post('/review',async(req,res)=>{
 app.get('/reviews',async(req,res)=>{
     let filter ={};
     const limit = Number(req.query.limit) || 0;
-    const product = req.query.productId;
-    if(req.query.email){
-        filter = {email: req.query.email};
-    }else if(req.query.productId){
-        filter = {productId: product};
+    
+    if(req.query.productId){
+        filter = {productId: req.query.productId};
     }
     const result = await reviews.find(filter).sort({time: -1}).limit(limit).toArray();
     res.send({
@@ -55,6 +91,27 @@ app.get('/reviews',async(req,res)=>{
         data: result
     })
 })
+
+app.get('/my-review',verifyToken,async(req,res)=>{
+    const email = req.query.email;
+    const decoded = req.decoded;
+    const filter = {email:email}
+    if(email != decoded){
+        return res.send({
+            message: 'access dined',
+            data:[]
+            
+        })
+    }
+    const result = await reviews.find(filter).toArray();
+    res.send({
+        success: true,
+        message: 'Reviews fetched successfully',
+        data: result
+    })
+
+})
+
 
 app.delete('/reviews/:id',async(req,res)=>{
     const id = req.params.id;
@@ -68,11 +125,11 @@ app.delete('/reviews/:id',async(req,res)=>{
 
 app.patch('/reviews/:id',async(req,res)=>{
         const id = req.params.id;
-        const rev = req.body;
+        const {newReview} = req.body;
 
         const  updateDoc = {
             $set:{
-                reviewText:rev
+                reviewText:newReview
             }
         }
 
